@@ -1,0 +1,20 @@
+{
+  "name": "foxbitsend",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Bolt Agência Criativa <www.agenciabolt.com.br>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-sass": "^3.3.7"
+  }
+}
