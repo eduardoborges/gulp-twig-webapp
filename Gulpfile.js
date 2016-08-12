@@ -12,7 +12,6 @@ var wiredep     = require('gulp-wiredep')
 var gulpif      = require('gulp-inject');
 var useref      = require('gulp-useref');
 var gulpif      = require('gulp-if');
-var cssnano     = require('gulp-cssnano');
 
 var APP_DIR = './app';
 var TMP_DIR = './.tmp';
@@ -30,6 +29,10 @@ gulp.task('twig', function() {
         .pipe(gulp.dest(TMP_DIR))
 })
 
+gulp.task('images', function() {
+    gulp.src(APP_DIR + '/img/**/**')
+      .pipe(gulp.dest(TMP_DIR + '/img'))
+});
 
 gulp.task('bower-deps', function() {
     return gulp.src(APP_DIR + '/index.twig')
@@ -37,8 +40,12 @@ gulp.task('bower-deps', function() {
         .pipe(gulp.dest(APP_DIR))
 });
 
+gulp.task('bower_components', function() {
+    gulp.src('bower_components/**/**')
+      .pipe(gulp.dest(TMP_DIR + '/bower_components'))
+});
 
-gulp.task('serve',['sass','twig','bower-deps'], function() {
+gulp.task('serve',['sass','twig','bower-deps','images','bower_components'], function() {
    browserSync.init({
         server: TMP_DIR
     });
@@ -46,6 +53,7 @@ gulp.task('serve',['sass','twig','bower-deps'], function() {
     gulp.watch('./bower_components/', ['bower-deps']).on('change', browserSync.reload);
     gulp.watch(APP_DIR + "/css/*.scss", ['sass']).on('change', browserSync.reload);
     gulp.watch(APP_DIR + "/*.twig",  ['twig']).on('change', browserSync.reload);
+    gulp.watch(APP_DIR + "/img/**/**",  ['images']).on('change', browserSync.reload);
 });
 
 
@@ -65,7 +73,13 @@ gulp.task('twig:dist',['bower-deps'], function() {
         .pipe(gulp.dest(DIST_DIR))
 })
 
-gulp.task('css-js-concat:dist', ['twig:dist'], function(){
+gulp.task('images:dist', function() {
+    gulp.src(APP_DIR + '/img/**/**')
+      .pipe(gulp.dest(DIST_DIR + '/img'))
+});
+
+
+gulp.task('vendor-assets:dist', ['twig:dist'], function(){
   return gulp.src(DIST_DIR + "/*.html")
     .pipe(useref())
     .pipe(sourcemaps.init())
@@ -76,7 +90,15 @@ gulp.task('css-js-concat:dist', ['twig:dist'], function(){
     .pipe(gulp.dest(DIST_DIR))
 });
 
-gulp.task('clean:dist', function() {
-  return del.sync('dist');
+gulp.task('sass:dist', function() {
+    return gulp.src(APP_DIR + '/css/*.scss')
+        .pipe(sass({ outputStyle: 'compressed'}).on('error', sass.logError))
+        .pipe(gulp.dest(DIST_DIR + "/css"));
+});
+
+gulp.task('dist',['twig:dist','images:dist','sass:dist','vendor-assets:dist']);
+
+gulp.task('clean', function() {
+  return del.sync(TMP_DIR);
 })
 
