@@ -1,18 +1,19 @@
 'use-strict';
 
-var gulp        = require('gulp');
-var concat      = require('gulp-concat');
-var browserSync = require('browser-sync').create();
-var sass        = require('gulp-sass');
-var sourcemaps  = require('gulp-sourcemaps');
-var twig        = require('gulp-twig');
-var uglify      = require('gulp-uglify');
-const del       = require('del');
+var gulp        = require('gulp')
+var concat      = require('gulp-concat')
+var browserSync = require('browser-sync').create()
+var sass        = require('gulp-sass')
+var sourcemaps  = require('gulp-sourcemaps')
+var twig        = require('gulp-twig')
+var uglify      = require('gulp-uglify')
+const del       = require('del')
 var wiredep     = require('gulp-wiredep')
-var gulpif      = require('gulp-inject');
-var useref      = require('gulp-useref');
-var gulpif      = require('gulp-if');
-var cssnano     = require('gulp-cssnano');
+var gulpif      = require('gulp-inject')
+var useref      = require('gulp-useref')
+var gulpif      = require('gulp-if')
+var cssnano     = require('gulp-cssnano')
+var htmlmin     = require('gulp-htmlmin');
 
 var APP_DIR = './app';
 var TMP_DIR = './.tmp';
@@ -39,22 +40,12 @@ gulp.task('bower-deps', function() {
 
 
 gulp.task('serve',['sass','twig','bower-deps'], function() {
-   browserSync.init({
-        server: TMP_DIR
-    });
-
-    gulp.watch('./bower_components/', ['bower-deps']).on('change', browserSync.reload);
+    browserSync.init({ server: TMP_DIR });
+    gulp.watch('./bower_components/*', ['bower-deps','twig']).on('change', browserSync.reload);
     gulp.watch(APP_DIR + "/css/*.scss", ['sass']).on('change', browserSync.reload);
     gulp.watch(APP_DIR + "/*.twig",  ['twig']).on('change', browserSync.reload);
 });
 
-
-gulp.task('dist',['sass','twig','bower-deps'], function() {
-    gulp.src(APP_DIR + "*.twig", ['twig']).pipe(gulp.dest(DIST_DIR));
-});
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 ///   DISTRIBUITION TASKS //////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,8 +53,15 @@ gulp.task('dist',['sass','twig','bower-deps'], function() {
 gulp.task('twig:dist',['bower-deps'], function() {
     return gulp.src(APP_DIR + "/*.twig")
         .pipe(twig())
+        //.pipe(htmlmin({collapseWhitespace: true}))
         .pipe(gulp.dest(DIST_DIR))
 })
+
+gulp.task('bower-deps:dist', function() {
+    return gulp.src(APP_DIR + '/index.twig')
+        .pipe(wiredep())
+        .pipe(gulp.dest(DIST_DIR))
+});
 
 gulp.task('css-js-concat:dist', ['twig:dist'], function(){
   return gulp.src(DIST_DIR + "/*.html")
@@ -76,7 +74,11 @@ gulp.task('css-js-concat:dist', ['twig:dist'], function(){
     .pipe(gulp.dest(DIST_DIR))
 });
 
-gulp.task('clean:dist', function() {
-  return del.sync('dist');
+gulp.task('dist',['twig:dist','bower-deps:dist','css-js-concat:dist'], function() {
+    return gulp.src(APP_DIR + "*.twig", ['twig']).pipe(gulp.dest(DIST_DIR));
+});
+
+gulp.task('clean', function() {
+  return del.sync([DIST_DIR, TMP_DIR]);
 })
 
